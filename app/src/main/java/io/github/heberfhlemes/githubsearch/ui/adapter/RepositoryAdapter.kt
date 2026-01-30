@@ -10,7 +10,7 @@ import io.github.heberfhlemes.githubsearch.domain.Repository
 class RepositoryAdapter(private val repositories: List<Repository>) :
     RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
 
-    var carItemLister: (Repository) -> Unit = {}
+    var repositoryItemLister: (Repository) -> Unit = {}
     var btnShareLister: (Repository) -> Unit = {}
 
     // Cria uma nova view
@@ -28,7 +28,7 @@ class RepositoryAdapter(private val repositories: List<Repository>) :
 
         // Exemplo de click no item
         //holder.itemView.setOnClickListener {
-        // carItemLister(repositores[position])
+        // repositoryItemLister(repositores[position])
         //}
 
         // Exemplo de click no btn Share

@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
+import android.widget.Adapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -17,6 +18,10 @@ import io.github.heberfhlemes.githubsearch.data.GitHubService
 import io.github.heberfhlemes.githubsearch.domain.Repository
 import androidx.core.net.toUri
 import androidx.core.content.edit
+import androidx.core.view.isVisible
+import io.github.heberfhlemes.githubsearch.ui.adapter.RepositoryAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -114,22 +119,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Verifica se o dispositivo está conectado à Internet para então poder realizar as requisições.
-     */
-    fun hasInternet() : Boolean {
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities =
-            connectivityManager.getNetworkCapabilities(network) ?: return false
-
-        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
-    }
-
-    /**
      * Metodo responsável por buscar todos os repositorios do usuário fornecido
      */
     fun getAllReposByUserName() {
@@ -165,9 +154,9 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Metodo responsável por realizar a configuração do adapter
-     * @TODO 7 - Implementar a configuracao do Adapter , construir o adapter e instancia-lo passando a listagem dos repositorios
      */
     fun setupAdapter(list: List<Repository>) {
+        listaRepositories.adapter = RepositoryAdapter(list)
     }
 
     /**
@@ -197,6 +186,22 @@ class MainActivity : AppCompatActivity() {
             )
         )
 
+    }
+
+    /**
+     * Verifica se o dispositivo está conectado à Internet para então poder realizar as requisições.
+     */
+    fun hasInternet() : Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
     /**
