@@ -1,4 +1,4 @@
-package br.com.igorbag.githubsearch
+package io.github.heberfhlemes.githubsearch
 
 import org.junit.Test
 

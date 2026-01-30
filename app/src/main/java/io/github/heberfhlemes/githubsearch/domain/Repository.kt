@@ -1,4 +1,4 @@
-package br.com.igorbag.githubsearch.domain
+package io.github.heberfhlemes.githubsearch.domain
 
 import com.google.gson.annotations.SerializedName
 

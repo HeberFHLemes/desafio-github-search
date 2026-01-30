@@ -1,4 +1,4 @@
-package br.com.igorbag.githubsearch.ui
+package io.github.heberfhlemes.githubsearch.ui
 
 import android.content.Intent
 import android.net.Uri
@@ -7,9 +7,9 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
-import br.com.igorbag.githubsearch.R
-import br.com.igorbag.githubsearch.data.GitHubService
-import br.com.igorbag.githubsearch.domain.Repository
+import io.github.heberfhlemes.githubsearch.R
+import io.github.heberfhlemes.githubsearch.data.GitHubService
+import io.github.heberfhlemes.githubsearch.domain.Repository
 
 class MainActivity : AppCompatActivity() {
 

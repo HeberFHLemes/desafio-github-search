@@ -1,11 +1,11 @@
-package br.com.igorbag.githubsearch.ui.adapter
+package io.github.heberfhlemes.githubsearch.ui.adapter
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import br.com.igorbag.githubsearch.R
-import br.com.igorbag.githubsearch.domain.Repository
+import io.github.heberfhlemes.githubsearch.R
+import io.github.heberfhlemes.githubsearch.domain.Repository
 
 class RepositoryAdapter(private val repositories: List<Repository>) :
     RecyclerView.Adapter<RepositoryAdapter.ViewHolder>() {
