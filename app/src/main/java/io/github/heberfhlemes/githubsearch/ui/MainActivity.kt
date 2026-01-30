@@ -1,7 +1,6 @@
 package io.github.heberfhlemes.githubsearch.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
@@ -10,6 +9,14 @@ import androidx.recyclerview.widget.RecyclerView
 import io.github.heberfhlemes.githubsearch.R
 import io.github.heberfhlemes.githubsearch.data.GitHubService
 import io.github.heberfhlemes.githubsearch.domain.Repository
+import androidx.core.net.toUri
+import androidx.core.content.edit
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
+private const val PREF_NAME = "github_usernames_prefs"
+private const val KEY_USER = "username"
+private const val API_BASE_URL = "https://api.github.com/"
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,57 +29,96 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setupView()
+        setupListeners()
         showUserName()
         setupRetrofit()
-        getAllReposByUserName()
     }
 
-    // Metodo responsavel por realizar o setup da view e recuperar os Ids do layout
+    /**
+     * Metodo responsavel por realizar o setup da view e recuperar os IDs do layout
+     */
     fun setupView() {
-        //@TODO 1 - Recuperar os Id's da tela para a Activity com o findViewById
+        nomeUsuario = findViewById(R.id.et_nome_usuario)
+        btnConfirmar = findViewById(R.id.btn_confirmar)
+        listaRepositories = findViewById(R.id.rv_lista_repositories)
     }
 
-    //metodo responsavel por configurar os listeners click da tela
+    /**
+     * Metodo responsável por configurar os listeners de clique na tela
+     */
     private fun setupListeners() {
-        //@TODO 2 - colocar a acao de click do botao confirmar
+        btnConfirmar.setOnClickListener {
+            saveUserLocal()
+            getAllReposByUserName()
+        }
     }
 
 
-    // salvar o usuario preenchido no EditText utilizando uma SharedPreferences
+    /**
+     * Persistir o usuario preenchido no EditText utilizando uma SharedPreferences
+     */
     private fun saveUserLocal() {
-        //@TODO 3 - Persistir o usuario preenchido na editText com a SharedPref no listener do botao salvar
+        val sharedPref = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+        if (nomeUsuario.text.isNullOrEmpty()) {
+            nomeUsuario.error = "Campo não pode estar vazio"
+            return
+        }
+        val nomeUsuarioValue = nomeUsuario.text.toString()
+        sharedPref.edit {
+            putString(KEY_USER, nomeUsuarioValue)
+        }
     }
 
+    /**
+     * Depois de persistir o usuario, exibir sempre as informacoes no EditText.
+     * Se a sharedpref possuir algum valor, exibir no proprio editText o valor salvo.
+     */
     private fun showUserName() {
-        //@TODO 4- depois de persistir o usuario exibir sempre as informacoes no EditText  se a sharedpref possuir algum valor, exibir no proprio editText o valor salvo
+        val sharedPref = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+
+        val username = sharedPref.getString(KEY_USER, "")
+
+        if (!username.isNullOrEmpty()) {
+            nomeUsuario.setText(username)
+        }
     }
 
-    //Metodo responsavel por fazer a configuracao base do Retrofit
+    /**
+     * Metodo responsável por fazer a configuração base do Retrofit
+     *
+     * Documentacao oficial do retrofit - https://square.github.io/retrofit/
+     *
+     * URL_BASE da API do  GitHub= https://api.github.com/
+     *
+     * Lembre-se de utilizar o GsonConverterFactory mostrado no curso
+    */
     fun setupRetrofit() {
-        /*
-           @TODO 5 -  realizar a Configuracao base do retrofit
-           Documentacao oficial do retrofit - https://square.github.io/retrofit/
-           URL_BASE da API do  GitHub= https://api.github.com/
-           lembre-se de utilizar o GsonConverterFactory mostrado no curso
-        */
+        val retrofit = Retrofit.Builder()
+            .baseUrl(API_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        githubApi = retrofit.create(GitHubService::class.java)
     }
 
-    //Metodo responsavel por buscar todos os repositorios do usuario fornecido
+    /**
+     * Metodo responsável por buscar todos os repositorios do usuário fornecido
+     * @TODO 6 - realizar a implementação do callback do retrofit e chamar o metodo setupAdapter se retornar os dados com sucesso
+     */
     fun getAllReposByUserName() {
-        // TODO 6 - realizar a implementacao do callback do retrofit e chamar o metodo setupAdapter se retornar os dados com sucesso
     }
 
-    // Metodo responsavel por realizar a configuracao do adapter
+    /**
+     * Metodo responsável por realizar a configuração do adapter
+     * @TODO 7 - Implementar a configuracao do Adapter , construir o adapter e instancia-lo passando a listagem dos repositorios
+     */
     fun setupAdapter(list: List<Repository>) {
-        /*
-            @TODO 7 - Implementar a configuracao do Adapter , construir o adapter e instancia-lo
-            passando a listagem dos repositorios
-         */
     }
 
-
-    // Metodo responsavel por compartilhar o link do repositorio selecionado
-    // @Todo 11 - Colocar esse metodo no click do share item do adapter
+    /**
+     * Metodo responsavel por compartilhar o link do repositorio selecionado
+     * @Todo 11 - Colocar este metodo no click do share item do adapter
+     */
     fun shareRepositoryLink(urlRepository: String) {
         val sendIntent: Intent = Intent().apply {
             action = Intent.ACTION_SEND
@@ -84,14 +130,15 @@ class MainActivity : AppCompatActivity() {
         startActivity(shareIntent)
     }
 
-    // Metodo responsavel por abrir o browser com o link informado do repositorio
-
-    // @Todo 12 - Colocar esse metodo no click item do adapter
+    /**
+     * Metodo responsável por abrir o browser com o link informado do repositório
+     * @Todo 12 - Colocar este método no click item do adapter
+     */
     fun openBrowser(urlRepository: String) {
         startActivity(
             Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse(urlRepository)
+                urlRepository.toUri()
             )
         )
 
