@@ -2,8 +2,10 @@ package io.github.heberfhlemes.githubsearch.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import io.github.heberfhlemes.githubsearch.R
@@ -11,6 +13,10 @@ import io.github.heberfhlemes.githubsearch.data.GitHubService
 import io.github.heberfhlemes.githubsearch.domain.Repository
 import androidx.core.net.toUri
 import androidx.core.content.edit
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -74,13 +80,16 @@ class MainActivity : AppCompatActivity() {
      * Se a sharedpref possuir algum valor, exibir no proprio editText o valor salvo.
      */
     private fun showUserName() {
-        val sharedPref = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
-
-        val username = sharedPref.getString(KEY_USER, "")
+        val username = getUsername()
 
         if (!username.isNullOrEmpty()) {
             nomeUsuario.setText(username)
         }
+    }
+
+    private fun getUsername() : String? {
+        return getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+            .getString(KEY_USER, "")
     }
 
     /**
@@ -103,9 +112,43 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Metodo responsável por buscar todos os repositorios do usuário fornecido
-     * @TODO 6 - realizar a implementação do callback do retrofit e chamar o metodo setupAdapter se retornar os dados com sucesso
      */
     fun getAllReposByUserName() {
+        val username = getUsername()
+        if (username.isNullOrEmpty()) return
+
+        githubApi.getAllRepositoriesByUser(username)
+            .enqueue(object : Callback<List<Repository>> {
+                override fun onResponse(call: Call<List<Repository>>, response: Response<List<Repository>>) {
+                    if (response.isSuccessful) {
+                        val repos = response.body()
+                        if (!repos.isNullOrEmpty()) {
+                            setupAdapter(repos)
+                        } else {
+                            Toast.makeText(
+                                this@MainActivity,
+                                R.string.user_no_repos,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            R.string.response_error,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<List<Repository>>, t: Throwable) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        R.string.response_error,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    Log.e("GitHubAPI", "Erro ao buscar repositórios", t)
+                }
+            })
     }
 
     /**

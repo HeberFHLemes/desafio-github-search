@@ -2,4 +2,6 @@
     <string name="app_name">GitHubSearch</string>
     <string name="nome_usuario">Nome do usuário</string>
     <string name="confirmar">Confirmar</string>
+    <string name="response_error">Erro ao consultar dados</string>
+    <string name="user_no_repos">Usuário sem repositórios</string>
 </resources>
