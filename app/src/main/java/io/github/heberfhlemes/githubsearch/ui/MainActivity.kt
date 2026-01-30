@@ -1,11 +1,15 @@
 package io.github.heberfhlemes.githubsearch.ui
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import io.github.heberfhlemes.githubsearch.R
@@ -13,7 +17,6 @@ import io.github.heberfhlemes.githubsearch.data.GitHubService
 import io.github.heberfhlemes.githubsearch.domain.Repository
 import androidx.core.net.toUri
 import androidx.core.content.edit
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -111,41 +114,50 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Verifica se o dispositivo está conectado à Internet para então poder realizar as requisições.
+     */
+    fun hasInternet() : Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+    }
+
+    /**
      * Metodo responsável por buscar todos os repositorios do usuário fornecido
      */
     fun getAllReposByUserName() {
-        val username = getUsername()
-        if (username.isNullOrEmpty()) return
+        if (!hasInternet()) {
+            showError(R.string.no_internet)
+            return
+        }
+
+        val username = getUsername().takeUnless { it.isNullOrBlank() } ?: return
 
         githubApi.getAllRepositoriesByUser(username)
             .enqueue(object : Callback<List<Repository>> {
-                override fun onResponse(call: Call<List<Repository>>, response: Response<List<Repository>>) {
-                    if (response.isSuccessful) {
-                        val repos = response.body()
-                        if (!repos.isNullOrEmpty()) {
-                            setupAdapter(repos)
-                        } else {
-                            Toast.makeText(
-                                this@MainActivity,
-                                R.string.user_no_repos,
-                                Toast.LENGTH_LONG
-                            ).show()
+
+                override fun onResponse(
+                    call: Call<List<Repository>>,
+                    response: Response<List<Repository>>
+                ) {
+                    response.takeIf { it.isSuccessful }
+                        ?.body()
+                        ?.takeIf { it.isNotEmpty() }
+                        ?.let(::setupAdapter)
+                        ?: run {
+                            showError(R.string.user_no_repos)
                         }
-                    } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            R.string.response_error,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
                 }
 
                 override fun onFailure(call: Call<List<Repository>>, t: Throwable) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        R.string.response_error,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    showError(R.string.response_error)
                     Log.e("GitHubAPI", "Erro ao buscar repositórios", t)
                 }
             })
@@ -187,4 +199,13 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    /**
+     * Chama o [Toast.makeText] para mostrar uma mensagem ao usuário,
+     * com o contexto correto desta classe [MainActivity].
+     *
+     * @param message mensagem a ser apresentada ao usuário
+     */
+    private fun showError(@StringRes message: Int) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
 }
