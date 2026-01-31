@@ -1,12 +1,10 @@
 package io.github.heberfhlemes.githubsearch.ui
 
-import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
-import android.widget.Adapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -16,12 +14,9 @@ import androidx.recyclerview.widget.RecyclerView
 import io.github.heberfhlemes.githubsearch.R
 import io.github.heberfhlemes.githubsearch.data.GitHubService
 import io.github.heberfhlemes.githubsearch.domain.Repository
+import io.github.heberfhlemes.githubsearch.ui.adapter.RepositoryAdapter
 import androidx.core.net.toUri
 import androidx.core.content.edit
-import androidx.core.view.isVisible
-import io.github.heberfhlemes.githubsearch.ui.adapter.RepositoryAdapter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -30,7 +25,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 private const val PREF_NAME = "github_usernames_prefs"
 private const val KEY_USER = "username"
-private const val API_BASE_URL = "https://api.github.com/"
+const val API_BASE_URL = "https://api.github.com/"
 
 class MainActivity : AppCompatActivity() {
 
@@ -74,7 +69,7 @@ class MainActivity : AppCompatActivity() {
     private fun saveUserLocal() {
         val sharedPref = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
         if (nomeUsuario.text.isNullOrEmpty()) {
-            nomeUsuario.error = "Campo não pode estar vazio"
+            nomeUsuario.error = getString(R.string.no_empty_field)
             return
         }
         val nomeUsuarioValue = nomeUsuario.text.toString()
@@ -95,7 +90,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getUsername() : String? {
+    /**
+     * Retorna o valor relativo ao nome de usuário, armazenado na SharedPreferences.
+     */
+    private fun getUsername(): String? {
         return getSharedPreferences(PREF_NAME, MODE_PRIVATE)
             .getString(KEY_USER, "")
     }
@@ -108,7 +106,7 @@ class MainActivity : AppCompatActivity() {
      * URL_BASE da API do  GitHub= https://api.github.com/
      *
      * Lembre-se de utilizar o GsonConverterFactory mostrado no curso
-    */
+     */
     fun setupRetrofit() {
         val retrofit = Retrofit.Builder()
             .baseUrl(API_BASE_URL)
@@ -156,12 +154,21 @@ class MainActivity : AppCompatActivity() {
      * Metodo responsável por realizar a configuração do adapter
      */
     fun setupAdapter(list: List<Repository>) {
-        listaRepositories.adapter = RepositoryAdapter(list)
+        val adapter = RepositoryAdapter(list)
+
+        adapter.onItemClick = { repository ->
+            openBrowser(repository.htmlUrl)
+        }
+
+        adapter.onShareClick = { repository ->
+            shareRepositoryLink(repository.htmlUrl)
+        }
+
+        listaRepositories.adapter = adapter
     }
 
     /**
-     * Metodo responsavel por compartilhar o link do repositorio selecionado
-     * @Todo 11 - Colocar este metodo no click do share item do adapter
+     * Metodo responsável por compartilhar o link do repositório selecionado
      */
     fun shareRepositoryLink(urlRepository: String) {
         val sendIntent: Intent = Intent().apply {
@@ -176,7 +183,6 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Metodo responsável por abrir o browser com o link informado do repositório
-     * @Todo 12 - Colocar este método no click item do adapter
      */
     fun openBrowser(urlRepository: String) {
         startActivity(
@@ -185,15 +191,14 @@ class MainActivity : AppCompatActivity() {
                 urlRepository.toUri()
             )
         )
-
     }
 
     /**
      * Verifica se o dispositivo está conectado à Internet para então poder realizar as requisições.
      */
-    fun hasInternet() : Boolean {
+    fun hasInternet(): Boolean {
         val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
 
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities =

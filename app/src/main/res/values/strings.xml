@@ -5,4 +5,5 @@
     <string name="no_internet">Sem conexão com a internet</string>
     <string name="response_error">Erro ao consultar dados</string>
     <string name="user_no_repos">Usuário sem repositórios</string>
+    <string name="no_empty_field">Campo não pode estar vazio</string>
 </resources>
